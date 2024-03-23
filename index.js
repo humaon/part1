@@ -11,15 +11,13 @@ function loadDataFromFile(filename) {
   }
 }
 
-// store the loaded files
+const products = loadDataFromFile("products.json");
+const orders = loadDataFromFile("orders.json");
+const discounts = loadDataFromFile("discounts.json");
 
-const productsData = loadDataFromFile("products.json");
-const ordersData = loadDataFromFile("orders.json");
-const discountsData = loadDataFromFile("discounts.json");
-
-function calculateSalesSummary(products, orders, discounts) {
-  // Step 1: Calculate Total Sales Before Discount
-
+// Function to calculate sales summary
+function calculateSalesSummary(productsData, ordersData, discountsData) {
+  // Calculate total sales before discount is applied
   let totalSalesBeforeDiscount = 0;
   orders.forEach((order) => {
     order.items.forEach((item) => {
@@ -30,48 +28,33 @@ function calculateSalesSummary(products, orders, discounts) {
     });
   });
 
-  // Step 2: Calculate Total Sales After Discount Code is Applied
-
+  // Calculate total sales after discount code is applied
   let totalSalesAfterDiscount = totalSalesBeforeDiscount;
-  let totalDiscountAmount = 0;
+  let totalAmountLost = 0;
   orders.forEach((order) => {
     const discount = order.discount
-      ? discounts.find((discount) => discount.key === order.discount)
+      ? discounts.find((d) => d.key === order.discount)
       : null;
-    let discountPercentage = 0;
     if (discount) {
-      discountPercentage = discount.value;
-      const discountAmount = totalSalesBeforeDiscount * discount.value;
+      const discountValue = discount.value;
+      const discountAmount = totalSalesBeforeDiscount * discountValue;
       totalSalesAfterDiscount -= discountAmount;
-      totalDiscountAmount += discountAmount;
+      totalAmountLost += discountAmount;
     }
   });
 
-  // Step 3: Calculate Total Amount of Money Lost via Customer Using Discount Codes
-
-  const totalMoneyLost = totalDiscountAmount;
-
-  // Step 4: Calculate Average Discount per Customer as a Percentage
-
+  // Calculate average discount per customer as a percentage
   const totalCustomers = orders.length;
+  // Calculate average discount per customer as a percentage
   const averageDiscountPercentage =
-    totalCustomers > 0
-      ? (totalDiscountAmount / totalCustomers / totalSalesBeforeDiscount) * 100
-      : 0;
-
-  // Return the results
+    totalCustomers > 0 ? (totalAmountLost / totalSalesBeforeDiscount) * 100 : 0;
 
   return {
     totalSalesBeforeDiscount: totalSalesBeforeDiscount,
     totalSalesAfterDiscount: totalSalesAfterDiscount,
-    totalMoneyLost: totalMoneyLost,
+    totalAmountLost: totalAmountLost,
     averageDiscountPercentage: averageDiscountPercentage,
   };
 }
-
-const salesSummary = calculateSalesSummary(
-  productsData,
-  ordersData,
-  discountsData
-);
+const salesSummary = calculateSalesSummary(products, orders, discounts);
 console.log(salesSummary);
