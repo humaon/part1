@@ -1,6 +1,5 @@
 const fs = require("fs");
 
-// Function to load data from JSON file
 function loadDataFromFile(filename) {
   try {
     const data = fs.readFileSync(filename, "utf8");
@@ -11,50 +10,51 @@ function loadDataFromFile(filename) {
   }
 }
 
-const products = loadDataFromFile("products.json");
-const orders = loadDataFromFile("orders.json");
-const discounts = loadDataFromFile("discounts.json");
+const productsData = loadDataFromFile("products.json");
+const ordersData = loadDataFromFile("orders.json");
+const discountsData = loadDataFromFile("discounts.json");
 
-// Function to calculate sales summary
-function calculateSalesSummary(productsData, ordersData, discountsData) {
-  // Calculate total sales before discount is applied
+function calculateSalesSummary(products, orders, discounts) {
   let totalSalesBeforeDiscount = 0;
+  let totalDiscountAmount = 0;
+
   orders.forEach((order) => {
+    const appliedDiscount = discounts.find(
+      (discount) => discount.key === order.discount
+    );
+
     order.items.forEach((item) => {
       const product = products.find((prod) => prod.sku === item.sku);
       if (product) {
         totalSalesBeforeDiscount += product.price * item.quantity;
+        if (appliedDiscount) {
+          totalDiscountAmount +=
+            product.price * item.quantity * appliedDiscount.value;
+        }
       }
     });
   });
 
-  // Calculate total sales after discount code is applied
-  let totalSalesAfterDiscount = totalSalesBeforeDiscount;
-  let totalAmountLost = 0;
-  orders.forEach((order) => {
-    const discount = order.discount
-      ? discounts.find((d) => d.key === order.discount)
-      : null;
-    if (discount) {
-      const discountValue = discount.value;
-      const discountAmount = totalSalesBeforeDiscount * discountValue;
-      totalSalesAfterDiscount -= discountAmount;
-      totalAmountLost += discountAmount;
-    }
-  });
-
-  // Calculate average discount per customer as a percentage
   const totalCustomers = orders.length;
-  // Calculate average discount per customer as a percentage
   const averageDiscountPercentage =
-    totalCustomers > 0 ? (totalAmountLost / totalSalesBeforeDiscount) * 100 : 0;
+    totalCustomers > 0
+      ? (totalDiscountAmount / totalSalesBeforeDiscount) * 100
+      : 0;
+
+  const totalSalesAfterDiscount =
+    totalSalesBeforeDiscount - totalDiscountAmount;
 
   return {
-    totalSalesBeforeDiscount: totalSalesBeforeDiscount,
-    totalSalesAfterDiscount: totalSalesAfterDiscount,
-    totalAmountLost: totalAmountLost,
-    averageDiscountPercentage: averageDiscountPercentage,
+    totalSalesBeforeDiscount,
+    totalSalesAfterDiscount,
+    totalDiscountAmount,
+    averageDiscountPercentage,
   };
 }
-const salesSummary = calculateSalesSummary(products, orders, discounts);
+
+const salesSummary = calculateSalesSummary(
+  productsData,
+  ordersData,
+  discountsData
+);
 console.log(salesSummary);
