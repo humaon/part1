@@ -36,10 +36,9 @@ function calculateSalesSummary(products, orders, discounts) {
   });
 
   const totalCustomers = orders.length;
+  const dis = totalDiscountAmount / totalSalesBeforeDiscount;
   const averageDiscountPercentage =
-    totalCustomers > 0
-      ? (totalDiscountAmount / totalSalesBeforeDiscount) * 100
-      : 0;
+    totalCustomers > 0 ? (dis / totalCustomers) * 100 : 0;
 
   const totalSalesAfterDiscount =
     totalSalesBeforeDiscount - totalDiscountAmount;
